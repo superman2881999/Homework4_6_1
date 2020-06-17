@@ -237,15 +237,48 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if(id ==R.id.Delete){
                             // Xoá thư mục
-                            Log.e("TAG",file.getAbsolutePath());
                             if(!deleteDirectory(new File(file.getAbsolutePath()+"/"+filename))){
                                 Toast.makeText(getApplicationContext(),"Không thể xoá thư mục", Toast.LENGTH_LONG).show();
 
                             }
-                                Toast.makeText(getApplicationContext(),"Xoá thành công", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(),"Xoá thư mục thành công", Toast.LENGTH_LONG).show();
                         }
                         else if (id == R.id.ChangeName){
                             finish();
+                        }
+                    }
+                })
+                .create();
+
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+    public void alertDialogFile(final int id,final String filename){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        AlertDialog dialog = builder.setTitle("Thông Báo")
+                .setCancelable(true)
+                .setMessage("Bạn có muốn tiếp tục ?")
+                .setNegativeButton("No", null)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(id ==R.id.Delete){
+                            // Xoá file
+                            if(!deleteDirectory(new File(file.getAbsolutePath()))){
+                                Toast.makeText(getApplicationContext(),"Không thể xoá file", Toast.LENGTH_LONG).show();
+
+                            }
+                            Toast.makeText(getApplicationContext(),"Xoá file thành công", Toast.LENGTH_LONG).show();
+                        }
+                        else if (id == R.id.ChangeName){
+                            displayAlertDialogRename(filename);
+                        }
+                        else if (id == R.id.Copy){
+                            try {
+                                copyDirectory(file,file.getParentFile());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 })
@@ -282,22 +315,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
 
-
         int id = item.getItemId();
         if(checkFile(info.position)) {
             if (id == R.id.ChangeName){
-                displayAlertDialogRename(filename);
-                adapter.notifyDataSetChanged();
+                alertDialogFile(id,filename);
             }
             else if (id == R.id.Delete) {
-                finish();
+                alertDialogFile(id,filename);
             }
             else if (id == R.id.Copy) {
-                try {
-                    copyDirectory(file,file.getParentFile());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                alertDialogFile(id,filename);
             }
 
         }else{
@@ -311,21 +338,31 @@ public class MainActivity extends AppCompatActivity {
     }
     //Xoa thu muc
     public boolean deleteDirectory(File path) {
-        if( path.exists() ) {
-            File[] files = path.listFiles();
-            if (files == null) {
-                return true;
-            }
-            for(int i=0; i<files.length; i++) {
-                if(files[i].isDirectory()) {
-                    deleteDirectory(files[i]);
+
+       if(!checkFile(info.position)){
+           if( path.exists() ) {
+                File[] files = path.listFiles();
+                if (files == null) {
+                    return true;
                 }
-                else {
-                    files[i].delete();
+                for(int i=0; i<files.length; i++) {
+                    if(files[i].isDirectory()) {
+                        deleteDirectory(files[i]);
+                    }
+                    else {
+                        files[i].delete();
+                    }
                 }
-            }
-        }
-        adapter.notifyDataSetChanged();
+           }
+       }
+       else{
+           if (path.isDirectory()) {
+               File[] files = path.listFiles();
+               if (files != null)
+                   for (File f : files)
+                       deleteDirectory(f);
+           }
+       }
         return path.delete();
     }
     // doc file
@@ -425,64 +462,6 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException e) {
 
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private void ReadBMPSize() {
-        try {
-            LittleEndianDataInputStream is = new LittleEndianDataInputStream(getAssets().open("download.bmp"));
-            is.skip(18);
-            int width = is.readInt();
-            int height = is.readInt();
-
-            Log.v("TAG", "Size " + width + "x" + height);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-
-
-    private void ReadFileFromRaw() {
-        try {
-            InputStream is = getResources().openRawResource(R.raw.ic_android_black_24dp);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-            StringBuffer buffer = new StringBuffer();
-            String line;
-
-            while ((line = reader.readLine()) != null)
-                buffer.append(line);
-
-            reader.close();
-            is.close();
-
-            String content = buffer.toString();
-            Log.v("TAG", content);
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 }
